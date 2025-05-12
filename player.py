@@ -27,13 +27,13 @@ class Player:
         self.damage_popups = []
         self.frames = load_player_frames()
         self.x = SCREEN_WIDTH // 2
-        self.y = SCREEN_HEIGHT - 250
+        self.y = -100  # Spawns above the screen
         self.vx = 0
         self.vy = 0
         self.speed = 16
         self.jump_power = 38
         self.gravity = 2
-        self.on_ground = True
+        self.on_ground = False  # Player starts in the air
         self.direction = 'right'
         self.state = 'idle'  # idle, walk, jump, attack
         self.anim_index = 0

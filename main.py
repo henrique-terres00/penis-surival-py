@@ -113,6 +113,13 @@ def main(start_playing=False):
 
         # --- MENU/PAUSE/GAME OVER ---
         if not game_state.is_playing():
+            # Se voltou ao menu, reinicialize o jogo
+            if game_state.state == GameState.MENU:
+                player = Player()
+                enemies = []
+                spawner = Spawner()
+                kills = [0]
+                elapsed_time = 0
             leave_game = game_state.draw(screen, font, SCREEN_WIDTH, SCREEN_HEIGHT, background)
             pygame.display.flip()
             if game_state.state == 'leave_game' or leave_game:

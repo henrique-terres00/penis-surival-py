@@ -7,6 +7,8 @@ from spawner import Spawner
 import random
 from game_state import GameState
 from hitboxes import get_player_hitbox, get_enemy_hitbox, get_attack_hitbox
+from game_sounds import GameSounds
+from effects import Effects
 
 from background import ParallaxBackground
 
@@ -22,7 +24,7 @@ def handle_events(game_state, restart_flag):
     return None
 
 
-def update_game(player, spawner, enemies, kills, game_state):
+def update_game(player, spawner, enemies, kills, game_state, effects):
     # Player input and update
     keys = pygame.key.get_pressed()
     player.handle_input(keys)
@@ -45,6 +47,8 @@ def update_game(player, spawner, enemies, kills, game_state):
                 enemy.dmg_cooldown = 30
 
     # Player attack
+    min_dmg = 1
+    max_dmg = 5
     if player.state == 'attack':
         if not hasattr(player, 'attack_hit_set'):
             player.attack_hit_set = set()
@@ -53,7 +57,17 @@ def update_game(player, spawner, enemies, kills, game_state):
             enemy_hitbox = get_enemy_hitbox(enemy)
             if enemy.state != 'dead' and (attack_hitbox.colliderect(enemy_hitbox) or player_hitbox.colliderect(enemy_hitbox)):
                 if idx not in player.attack_hit_set:
-                    dmg = random.randint(1, 5)
+                    dmg = random.randint(min_dmg, max_dmg)
+                    if dmg == max_dmg:
+                        GameSounds.play_milky_effect()
+                        player_centerx = player.x + 90
+                        player_top = player.y
+                        player_position = (player_centerx, player_top)
+                        effects.add_milky_effect(duration=60, player_position=player_position)
+                        critical_dmg = dmg + random.randint(min_dmg, max_dmg)
+                        # Cura o jogador com o mesmo valor do dano crítico
+                        player.heal(critical_dmg)
+                        dmg = critical_dmg
                     enemy.take_damage(dmg)
                     player.attack_hit_set.add(idx)
                     if enemy.hp <= 0:
@@ -66,13 +80,15 @@ def update_game(player, spawner, enemies, kills, game_state):
         player.attack_hit_set = set()
 
 
-def draw_game(screen, background, player, enemies, hud, elapsed_time, kills):
+def draw_game(screen, background, player, enemies, hud, elapsed_time, kills, effects):
     background.update()
     background.draw(screen)
     for enemy in enemies:
         enemy.draw(screen)
     player.draw(screen)
     hud.draw_hud(screen, player, int(elapsed_time), kills)
+    # Desenha os efeitos visuais por cima de tudo
+    effects.draw(screen)
 
 
 def main(start_playing=False):
@@ -89,6 +105,7 @@ def main(start_playing=False):
     enemies = []
     spawner = Spawner()
     game_state = GameState()
+    effects = Effects()  # Inicializa o gerenciador de efeitos visuais
     if start_playing:
         game_state.set_state(GameState.PLAYING)
     restart_flag = {'restart': False}
@@ -130,9 +147,10 @@ def main(start_playing=False):
 
         # --- MAIN GAMEPLAY ---
         if game_state.state == GameState.PLAYING:
-            update_game(player, spawner, enemies, kills, game_state)
+            update_game(player, spawner, enemies, kills, game_state, effects)
+            effects.update()  # Atualiza os efeitos visuais
             elapsed_time += 1/FPS if FPS else 1/60
-            draw_game(screen, background, player, enemies, hud, elapsed_time, kills[0])
+            draw_game(screen, background, player, enemies, hud, elapsed_time, kills[0], effects)
             # Save kills/time for game over
             if player.hp <= 0 and game_state.state != 'game_over':
                 game_state.last_kills = kills[0]

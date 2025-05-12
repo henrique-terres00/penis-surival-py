@@ -27,11 +27,16 @@ def draw_mana_bar(surface, x, y, w, h, mana, max_mana):
 # Utility to update and remove expired damage popups
 def update_damage_popups(popups):
     for popup in popups[:]:
-        popup[2] -= 1
-        popup[3] = max(0, popup[3]-8)
-        popup[4] += 1
-        if popup[3] <= 0 or popup[4] > 40:
-            popups.remove(popup)
+        try:
+            popup[2] -= 1  # Move the popup upward
+            popup[3] = max(0, popup[3]-8)  # Reduce alpha (transparency)
+            popup[4] += 1  # Increment timer
+            if popup[3] <= 0 or popup[4] > 40:
+                popups.remove(popup)
+        except Exception as e:
+            # If there's any error, remove the problematic popup
+            if popup in popups:
+                popups.remove(popup)
 
 # Draw damage popups
 font = None
@@ -40,8 +45,27 @@ def draw_damage_popups(surface, popups):
     if font is None:
         font = pygame.font.SysFont('arial', 26, bold=True)
     for popup in popups:
-        dmg, x, y, alpha, timer = popup
-        text = font.render(str(dmg), True, (255,0,0))
+        if len(popup) >= 6:
+            # Popup format: [value, x, y, alpha, timer, type]
+            dmg, x, y, alpha, timer, popup_type = popup
+            
+            # Define the color based on the popup type (damage or heal)
+            if popup_type == "heal":
+                # Green for heal
+                color = (0, 255, 0)
+                # Adds a '+' before the value to indicate healing
+                text = font.render("+" + str(dmg), True, color)
+            else:
+                # Red for damage
+                color = (255, 0, 0)
+                text = font.render(str(dmg), True, color)
+        else:
+            # Old popup format: [value, x, y, alpha, timer]
+            dmg, x, y, alpha, timer = popup
+            # Red for damage (default behavior)
+            color = (255, 0, 0)
+            text = font.render(str(dmg), True, color)
+            
         text.set_alpha(alpha)
         surface.blit(text, (x - text.get_width()//2, y))
 

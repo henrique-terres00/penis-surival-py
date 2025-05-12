@@ -82,7 +82,7 @@ class Enemy:
         # Centralized above the health bar
         bar_x = self.x + ENEMY_SIZE[0] // 2
         bar_y = self.y - 25
-        self.damage_popups.append([str(dmg), bar_x, bar_y, 255, 0])
+        self.damage_popups.append([str(dmg), bar_x, bar_y, 255, 0, "damage"])
         if self.hp <= 0 and self.state != 'dead':
             self.state = 'dead'
             self.anim_index = 0

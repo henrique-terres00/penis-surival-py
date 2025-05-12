@@ -114,7 +114,22 @@ class Player:
         # Centralize above player
         popup_x = self.x + 90
         popup_y = self.y - 30
-        self.damage_popups.append([str(dmg), popup_x, popup_y, 255, 0])
+        self.damage_popups.append([str(dmg), popup_x, popup_y, 255, 0, "damage"])
+
+    def heal(self, amount):
+        # Ensure amount is a number
+        amount = int(amount) if amount else 0
+        
+        # Limit healing to not exceed maximum HP
+        old_hp = self.hp
+        self.hp = min(self.max_hp, self.hp + amount)
+        actual_heal = self.hp - old_hp
+            
+        if actual_heal > 0:
+            # Add healing popup (similar to damage popup, but in green)
+            popup_x = self.x + 90
+            popup_y = self.y - 30
+            self.damage_popups.append([str(actual_heal), popup_x, popup_y, 255, 0, "heal"])
 
     def draw(self, surface):
         from hud import draw_damage_popups

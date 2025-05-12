@@ -155,18 +155,31 @@ class GameState:
                 background.draw(screen)
             else:
                 screen.fill((30, 30, 30))
+            # Logo
+            import os
+            logo_path = os.path.join('assets', 'logo', 'logo.png')
+            if not hasattr(self, 'logo_img'):
+                if os.path.exists(logo_path):
+                    logo_img = pygame.image.load(logo_path).convert_alpha()
+                    logo_img = pygame.transform.smoothscale(logo_img, (400, 200))
+                    self.logo_img = logo_img
+                else:
+                    self.logo_img = None
+            if self.logo_img:
+                logo_rect = self.logo_img.get_rect()
+                logo_rect.centerx = screen_width // 2
+                logo_rect.top = 30
+                screen.blit(self.logo_img, logo_rect)
             # Menu options
             options = ['Play Game', 'Settings', 'Leave Game']
             if not hasattr(self, 'menu_index'):
                 self.menu_index = 0
-            title_font = pygame.font.SysFont(None, 72)
             option_font = pygame.font.SysFont(None, 48)
-            title = title_font.render('PENIS SURVIVAL', True, (255,255,255))
-            screen.blit(title, (screen_width//2 - title.get_width()//2, 120))
+            y_start = logo_rect.bottom + 30 if self.logo_img else 250
             for i, opt in enumerate(options):
                 color = (255,255,200) if i == self.menu_index else (180,180,180)
                 opt_txt = option_font.render(opt, True, color)
-                screen.blit(opt_txt, (screen_width//2 - opt_txt.get_width()//2, 250 + i*70))
+                screen.blit(opt_txt, (screen_width//2 - opt_txt.get_width()//2, y_start + i*70))
             # Instructions
             instr_font = pygame.font.SysFont(None, 28)
             instr = instr_font.render('Use as setinhas para navegar, ENTER para selecionar', True, (220,220,220))

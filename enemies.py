@@ -134,8 +134,10 @@ class BirdEnemy(Enemy):
             img_right = pygame.image.load(os.path.join(enemy_dir, f'{bird_name}_right_{i}.png')).convert_alpha()
             img_right = pygame.transform.scale(img_right, ENEMY_SIZE)
             frames['right'].append(img_right)
-        # Use last frame for dead
-        frames['dead'] = frames['left'][-1] if direction == 'left' else frames['right'][-1]
+        # Load dead frame
+        dead_img = pygame.image.load(os.path.join(enemy_dir, f'dead_{bird_name}.png')).convert_alpha()
+        dead_img = pygame.transform.scale(dead_img, ENEMY_SIZE)
+        frames['dead'] = dead_img
         super().__init__(x, y, direction, frames, max_hp=5, speed=speed)
         self.dmg_min = dmg_min
         self.dmg_max = dmg_max
@@ -146,6 +148,12 @@ class BirdEnemy(Enemy):
         from hud import update_damage_popups
         update_damage_popups(self.damage_popups)
         if self.state == 'dead':
+            # Animate fall
+            if not hasattr(self, 'fall_vy'):
+                self.fall_vy = 0
+            self.fall_vy += 1.2  # gravity
+            self.y += self.fall_vy
+            self.rect.topleft = (self.x, self.y)
             self.dead_timer += 1
             if hasattr(self, 'fade_alpha'):
                 self.fade_alpha = max(0, self.fade_alpha - 10)

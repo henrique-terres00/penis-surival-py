@@ -29,19 +29,131 @@ def update_game(player, spawner, enemies, kills, game_state, effects):
     keys = pygame.key.get_pressed()
     player.handle_input(keys)
     player.update()
+    
+    # Atualizar o HUD da ultimate com base no estado da mana e da ultimate
+    is_ultimate_ready = player.mana >= player.max_mana and not player.ultimate_active
+    
+    # Adicionar ou atualizar o efeito do HUD da ultimate
+    effects.add_ultimate_hud(is_ready=is_ultimate_ready)
 
     # Spawn enemies
     new_enemy = spawner.update(player_alive=(player.hp > 0))
     if new_enemy:
         enemies.append(new_enemy)
 
-    # Enemy collisions
+    # Handle Ultimate ability effects if active
+    if player.ultimate_active:
+        # Check if we need to create the ultimate visual effects
+        if hasattr(player, 'ultimate_effect_created') and player.ultimate_effect_created:
+            # Create the main ultimate visual effect in the direction the player was facing when activated
+            player_centerx = player.x + 90
+            player_top = player.y
+            player_position = (player_centerx, player_top)
+            
+            # Use the stored direction from when the ultimate was activated
+            ultimate_direction = player.ultimate_direction if hasattr(player, 'ultimate_direction') else player.direction
+            
+            # Adiciona o efeito direcional da ultimate
+            effects.add_ultimate_effect(player_position, ultimate_direction)
+            
+            # Adiciona o efeito central do master_cum
+            effects.add_master_cum_effect()
+            
+            # Reproduzir o som da ultimate
+            GameSounds.play_ultimate_effect()
+                
+            player.ultimate_effect_created = False  # Reset the flag
+            
+        # Apply Ultimate damage to enemies in the correct direction (only once)
+        if hasattr(player, 'ultimate_damage_pending') and player.ultimate_damage_pending:
+            # Get the direction the player was facing when the ultimate was activated
+            ultimate_direction = player.ultimate_direction if hasattr(player, 'ultimate_direction') else player.direction
+            
+            # Apply damage to enemies in that direction only
+            player_centerx = player.x + 90
+            player_centery = player.y + 90  # Centro vertical do jogador
+            enemies_hit = 0
+            
+            # Obter o tamanho do último frame (frame 4) da animação da ultimate para usar como alcance
+            ultimate_range = 0
+            if effects.ult_frames[ultimate_direction]:
+                # O último frame (índice 3) é o maior e define o alcance máximo
+                ultimate_range = effects.ult_frames[ultimate_direction][3].get_width()
+                
+            # Se não conseguir obter o tamanho, use um valor padrão
+            if ultimate_range == 0:
+                ultimate_range = 400  # Valor padrão caso não consiga obter o tamanho do frame
+                
+            print(f"Ultimate range: {ultimate_range} pixels")
+            
+            for enemy in enemies:
+                if enemy.state != 'dead':
+                    # Calcular o centro do inimigo
+                    enemy_centerx = enemy.x + (enemy.width // 2 if hasattr(enemy, 'width') else 90)
+                    enemy_centery = enemy.y + (enemy.height // 2 if hasattr(enemy, 'height') else 90)
+                    
+                    # Verificar se o inimigo está na direção correta
+                    is_to_right = enemy_centerx > player_centerx
+                    is_to_left = enemy_centerx < player_centerx
+                    
+                    # Calcular a distância horizontal entre o jogador e o inimigo
+                    horizontal_distance = abs(enemy_centerx - player_centerx)
+                    
+                    # Verificar se o inimigo está dentro do alcance e na direção correta
+                    if ((ultimate_direction == 'right' and is_to_right) or 
+                        (ultimate_direction == 'left' and is_to_left)) and \
+                       horizontal_distance <= ultimate_range:
+                        
+                        # Ultimate deals significant damage
+                        ultimate_dmg = 50  # Dano fatal para inimigos dentro do alcance
+                        enemy.take_damage(ultimate_dmg)
+                        enemies_hit += 1
+                        
+                        # Não adicionamos mais o efeito milky para inimigos mortos pela ultimate
+            
+            # Print debug info about enemies hit
+            print(f"Ultimate hit {enemies_hit} enemies in the {ultimate_direction} direction")
+            
+            # Reset the flag so we don't apply damage again
+            player.ultimate_damage_pending = False
+    
+    # Verificar se há efeitos de ultimate ativos e se inimigos entraram na área de efeito
+    active_ultimate_effects = [effect for effect in effects.effects 
+                              if effect['type'] == 'ultimate_animated' and 'effect_area' in effect]
+    
+    # Se há efeitos de ultimate ativos, verificar inimigos entrando na área
+    for effect in active_ultimate_effects:
+        effect_area = effect['effect_area']
+        direction = effect_area['direction']
+        enemies_hit = 0
+        
+        for enemy in enemies:
+            if enemy.state != 'dead':
+                # Calcular o centro do inimigo
+                enemy_centerx = enemy.x + (enemy.width // 2 if hasattr(enemy, 'width') else 90)
+                
+                # Verificar se o inimigo está dentro da área de efeito
+                is_in_effect_area = (enemy_centerx >= effect_area['x_start'] and 
+                                    enemy_centerx <= effect_area['x_end'])
+                
+                if is_in_effect_area:
+                    # Ultimate deals significant damage to enemies that enter the effect area
+                    ultimate_dmg = 50  # Dano fatal
+                    enemy.take_damage(ultimate_dmg)
+                    enemies_hit += 1
+                    
+                    # Não adicionamos mais o efeito milky para inimigos mortos pela ultimate
+        
+        if enemies_hit > 0:
+            print(f"Ultimate caught {enemies_hit} enemies entering the effect area!")
+    
+    # Enemy collisions - player is invulnerable during ultimate
     player_hitbox = get_player_hitbox(player)
     for enemy in enemies:
         enemy_hitbox = get_enemy_hitbox(enemy)
         enemy.update(player)
         if enemy.state != 'dead' and player_hitbox.colliderect(enemy_hitbox):
-            if enemy.dmg_cooldown == 0:
+            if enemy.dmg_cooldown == 0 and not player.ultimate_active:  # No damage during ultimate
                 dmg = random.randint(enemy.dmg_min, enemy.dmg_max)
                 player.take_damage(dmg)
                 enemy.dmg_cooldown = 30
@@ -89,6 +201,14 @@ def draw_game(screen, background, player, enemies, hud, elapsed_time, kills, eff
     hud.draw_hud(screen, player, int(elapsed_time), kills)
     # Desenha os efeitos visuais por cima de tudo
     effects.draw(screen)
+    
+    # DEBUG: Desenhar a área de efeito da ultimate (comentado, apenas para debug)
+    # for effect in effects.effects:
+    #     if effect['type'] == 'ultimate_animated' and 'effect_area' in effect:
+    #         area = effect['effect_area']
+    #         pygame.draw.rect(screen, (255, 0, 0, 128), 
+    #                         (area['x_start'], area['y_center'] - 50, 
+    #                          area['x_end'] - area['x_start'], 100), 2)
 
 
 def main(start_playing=False):

@@ -1,5 +1,5 @@
 import random
-from enemies import FatGirlEnemy, WolfEnemy
+from enemies import FatGirlEnemy, WolfEnemy, BlueBirdEnemy, RedBirdEnemy
 from settings import SCREEN_WIDTH, SCREEN_HEIGHT
 
 class Spawner:
@@ -23,7 +23,20 @@ class Spawner:
             side = random.choice(['left', 'right'])
             x = 0 if side == 'left' else SCREEN_WIDTH-180
             direction = 'right' if side == 'left' else 'left'
-            if random.random() < 0.5:
+            enemy_type = random.choices(['blue_bird', 'red_bird', 'wolf', 'fatgirl'], weights=[1,1,1,1])[0]
+            if enemy_type == 'blue_bird':
+                y = random.randint(180, 250)
+                speed = 7 + self.difficulty//2
+                dmg_min = 2 + self.difficulty//2
+                dmg_max = 6 + self.difficulty//2
+                new_enemy = BlueBirdEnemy(x, y, direction, speed=speed, dmg_min=dmg_min, dmg_max=dmg_max)
+            elif enemy_type == 'red_bird':
+                y = random.randint(180, 250)
+                speed = 7 + self.difficulty//2
+                dmg_min = 2 + self.difficulty//2
+                dmg_max = 6 + self.difficulty//2
+                new_enemy = RedBirdEnemy(x, y, direction, speed=speed, dmg_min=dmg_min, dmg_max=dmg_max)
+            elif enemy_type == 'wolf':
                 speed = 6 + self.difficulty//2
                 dmg_min = 1 + self.difficulty//2
                 dmg_max = 7 + self.difficulty//2

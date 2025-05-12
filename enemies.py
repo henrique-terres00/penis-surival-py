@@ -121,3 +121,56 @@ class WolfEnemy(Enemy):
         super().__init__(x, y, direction, frames, max_hp=5, speed=speed)
         self.dmg_min = dmg_min
         self.dmg_max = dmg_max
+
+class BirdEnemy(Enemy):
+    def __init__(self, bird_name, x, y, direction, speed=7, dmg_min=2, dmg_max=6):
+        # Load frames
+        frames = {'left': [], 'right': [], 'dead': None}
+        enemy_dir = os.path.join('assets', 'enemies')
+        for i in range(1, 5):
+            img_left = pygame.image.load(os.path.join(enemy_dir, f'{bird_name}_left_{i}.png')).convert_alpha()
+            img_left = pygame.transform.scale(img_left, ENEMY_SIZE)
+            frames['left'].append(img_left)
+            img_right = pygame.image.load(os.path.join(enemy_dir, f'{bird_name}_right_{i}.png')).convert_alpha()
+            img_right = pygame.transform.scale(img_right, ENEMY_SIZE)
+            frames['right'].append(img_right)
+        # Use last frame for dead
+        frames['dead'] = frames['left'][-1] if direction == 'left' else frames['right'][-1]
+        super().__init__(x, y, direction, frames, max_hp=5, speed=speed)
+        self.dmg_min = dmg_min
+        self.dmg_max = dmg_max
+        self.base_y = y
+        self.osc_time = 0
+
+    def update(self, player):
+        from hud import update_damage_popups
+        update_damage_popups(self.damage_popups)
+        if self.state == 'dead':
+            self.dead_timer += 1
+            if hasattr(self, 'fade_alpha'):
+                self.fade_alpha = max(0, self.fade_alpha - 10)
+            return
+        self.anim_timer += self.anim_speed
+        if self.anim_timer >= 1:
+            self.anim_index = (self.anim_index + 1) % len(self.frames[self.direction])
+            self.anim_timer = 0
+        # Horizontal movement
+        if self.direction == 'right':
+            self.x += self.speed
+        else:
+            self.x -= self.speed
+        # Vertical movement
+        import math
+        self.osc_time += 0.10
+        self.y = self.base_y + math.sin(self.osc_time) * 40  # Oscillation
+        self.rect.topleft = (self.x, self.y)
+        if self.dmg_cooldown > 0:
+            self.dmg_cooldown -= 1
+
+class BlueBirdEnemy(BirdEnemy):
+    def __init__(self, x, y, direction, speed=7, dmg_min=2, dmg_max=6):
+        super().__init__('blue_bird', x, y, direction, speed, dmg_min, dmg_max)
+
+class RedBirdEnemy(BirdEnemy):
+    def __init__(self, x, y, direction, speed=7, dmg_min=2, dmg_max=6):
+        super().__init__('red_bird', x, y, direction, speed, dmg_min, dmg_max)

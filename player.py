@@ -31,7 +31,7 @@ class Player:
         self.vx = 0
         self.vy = 0
         self.speed = 16
-        self.jump_power = 38
+        self.jump_power = 48
         self.gravity = 2
         self.on_ground = False  # Começa caindo
         self.direction = 'right'

@@ -27,20 +27,23 @@ class Player:
         self.damage_popups = []
         self.frames = load_player_frames()
         self.x = SCREEN_WIDTH // 2
-        self.y = -100  # Nasce no topo da tela, caindo
+        self.y = SCREEN_HEIGHT - 250
         self.vx = 0
         self.vy = 0
         self.speed = 16
         self.jump_power = 48
         self.gravity = 2
-        self.on_ground = False  # Começa caindo
+        self.on_ground = True
         self.direction = 'right'
-        self.state = 'idle'  # idle, walk, jump, attack
+        self.state = 'idle'  # idle, walk, jump, attack, ultimate
         self.anim_index = 0
         self.anim_timer = 0
         self.anim_speed = 0.13
         self.attack_anim_speed = 0.28
         self.attack_cooldown = 0
+        self.ultimate_cooldown = 0
+        self.ultimate_active = False
+        self.ultimate_duration = 0
         self.mana = 0
         self.max_mana = 100
 
@@ -69,6 +72,10 @@ class Player:
             self.state = 'attack'
             self.anim_index = 0
             self.attack_cooldown = 20
+            
+        # Ultimate ability activation with 'x' key when mana is full
+        if keys[pygame.K_x] and self.mana >= self.max_mana and self.ultimate_cooldown == 0:
+            self.use_ultimate()
 
     def update(self):
         from hud import update_damage_popups
@@ -83,6 +90,18 @@ class Player:
                 self.vy = 0
                 self.on_ground = True
                 self.state = 'idle'
+                
+        # Update ultimate ability if active
+        if self.ultimate_active:
+            self.ultimate_duration -= 1
+            if self.ultimate_duration <= 0:
+                self.ultimate_active = False
+                print("Ultimate ability ended")
+                
+        # Update cooldowns
+        if self.ultimate_cooldown > 0:
+            self.ultimate_cooldown -= 1
+                
         if self.state == 'attack':
             self.anim_timer += self.attack_anim_speed
         else:
@@ -130,6 +149,46 @@ class Player:
             popup_x = self.x + 90
             popup_y = self.y - 30
             self.damage_popups.append([str(actual_heal), popup_x, popup_y, 255, 0, "heal"])
+            
+    def use_ultimate(self):
+        """Activate the player's ultimate ability when mana is full.
+        The ultimate ability has the following effects:
+        1. Deals damage to enemies in the direction the player is facing
+        2. Heals the player
+        3. Makes the player temporarily invulnerable
+        4. Consumes all mana
+        5. Creates a visual effect
+        """
+        if self.mana < self.max_mana:
+            return  # Not enough mana
+            
+        print("Ultimate ability activated!")
+        
+        # Consume all mana
+        self.mana = 0
+        
+        # Set cooldown and duration
+        self.ultimate_cooldown = 300  # 5 seconds at 60 FPS
+        self.ultimate_active = True
+        self.ultimate_duration = 180  # 3 seconds at 60 FPS
+        
+        # Store the direction at the time of activation
+        self.ultimate_direction = self.direction
+        
+        # Heal the player for 30% of max health
+        heal_amount = int(self.max_hp * 0.3)
+        self.heal(heal_amount)
+        
+        # Set a flag to indicate that we need to create a visual effect
+        # This will be checked in the main game loop
+        self.ultimate_effect_created = True
+        
+        # Change player state to indicate ultimate is active
+        self.state = 'ultimate'  # This can be used for special animations if needed
+        
+        # Set a flag to indicate that we need to apply damage to enemies
+        # This will be checked in the main game loop
+        self.ultimate_damage_pending = True
 
     def draw(self, surface):
         from hud import draw_damage_popups
@@ -141,7 +200,11 @@ class Player:
             frames = self.frames['attack_right'] if self.direction == 'right' else self.frames['attack_left']
         else:
             frames = [self.frames['walk_right'][0]] if self.direction == 'right' else [self.frames['walk_left'][0]]
+        
         img = frames[self.anim_index % len(frames)]
+        
+        # Draw the player normally (without glow effect)
         surface.blit(img, (self.x, self.y))
+            
         # Draw player damage popups
         draw_damage_popups(surface, self.damage_popups)

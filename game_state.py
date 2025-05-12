@@ -182,7 +182,7 @@ class GameState:
                 screen.blit(opt_txt, (screen_width//2 - opt_txt.get_width()//2, y_start + i*70))
             # Instructions
             instr_font = pygame.font.SysFont(None, 28)
-            instr = instr_font.render('Use as setinhas para navegar, ENTER para selecionar', True, (220,220,220))
+            instr = instr_font.render('Use arrows to navigate, ENTER to select', True, (220,220,220))
             screen.blit(instr, (screen_width//2 - instr.get_width()//2, screen_height-60))
         elif self.state == GameState.PAUSED:
             # Animated background
@@ -203,7 +203,7 @@ class GameState:
                 opt_txt = option_font.render(opt, True, color)
                 screen.blit(opt_txt, (screen_width//2 - opt_txt.get_width()//2, 230 + i*60))
             instr_font = pygame.font.SysFont(None, 28)
-            instr = instr_font.render('Use as setinhas para navegar, ENTER para selecionar', True, (220,220,220))
+            instr = instr_font.render('Use arrows to navigate, ENTER to select', True, (220,220,220))
             screen.blit(instr, (screen_width//2 - instr.get_width()//2, screen_height-60))
         elif self.state == GameState.GAME_OVER:
             # Animated background
@@ -236,7 +236,7 @@ class GameState:
                 opt_txt = option_font.render(opt, True, color)
                 screen.blit(opt_txt, (screen_width//2 - opt_txt.get_width()//2, 340 + i*60))
             instr_font = pygame.font.SysFont(None, 28)
-            instr = instr_font.render('Use as setinhas para navegar, ENTER para selecionar', True, (220,220,220))
+            instr = instr_font.render('Use arrows to navigate, ENTER to select', True, (220,220,220))
             screen.blit(instr, (screen_width//2 - instr.get_width()//2, screen_height-60))
         elif self.state == 'settings':
             # Draw settings screen with animated background

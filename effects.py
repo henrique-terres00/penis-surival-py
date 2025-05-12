@@ -32,12 +32,12 @@ class Effects:
         These images are displayed to show the status of the ultimate ability.
         """
         try:
-            # Carregar imagem de Ultimate Ready
+            # Load Ultimate Ready image
             ready_path = os.path.join('assets', 'effects', 'ult_ready_hud.png')
             ready_image = pygame.image.load(ready_path).convert_alpha()
             self.ult_ready_hud_image = pygame.transform.scale(ready_image, (200, 200))
             
-            # Carregar imagem de Ultimate Not Ready
+            # Load Ultimate Not Ready image
             not_ready_path = os.path.join('assets', 'effects', 'ult_not_ready_hud.png')
             not_ready_image = pygame.image.load(not_ready_path).convert_alpha()
             self.ult_not_ready_hud_image = pygame.transform.scale(not_ready_image, (200, 200))
@@ -55,28 +55,28 @@ class Effects:
             image_path = os.path.join('assets', 'effects', 'master_cum.png')
             original_image = pygame.image.load(image_path).convert_alpha()
             
-            # Obter as dimensões originais
+            # Get the original dimensions
             original_width = original_image.get_width()
             original_height = original_image.get_height()
             
-            # Calcular a proporção original
+            # Calculate the original aspect ratio
             aspect_ratio = original_width / original_height
             
-            # Definir a largura desejada e calcular a altura proporcional
-            # Aumentando a largura para garantir que não pareça espremido
-            target_width = 900  # Aumentado para 900 pixels para um efeito muito mais dramático
+            # Define the desired width and calculate the proportional height
+            # Increasing the width to ensure it doesn't look squeezed
+            target_width = 900  # Increased to 900 pixels for a much more dramatic effect
             
-            # Garantir que a altura seja pelo menos 180 pixels para melhor visualização
+            # Ensure the height is at least 180 pixels for better visualization
             target_height = max(180, int(target_width / aspect_ratio))
             
-            # Imprimir informações sobre as dimensões para debug
+            # Print information about dimensions for debugging
             print(f"Original dimensions: {original_width}x{original_height}, aspect ratio: {aspect_ratio}")
             print(f"Scaled dimensions: {target_width}x{target_height}")
             
             # Redimensionar a imagem mantendo a proporção original
             scaled_image = pygame.transform.scale(original_image, (target_width, target_height))
             
-            # Verificar se a imagem redimensionada tem a proporção correta
+            # Check if the resized image has the correct aspect ratio
             actual_aspect = scaled_image.get_width() / scaled_image.get_height()
             print(f"Actual aspect ratio after scaling: {actual_aspect}")
             
@@ -407,7 +407,7 @@ class Effects:
                     if effect['scale'] > 1.1 or effect['scale'] < 0.9:
                         effect['scale_direction'] *= -1
                         
-                    # Obter as dimensões originais da imagem
+                    # Get the original dimensions of the image
                     original_width = self.master_cum_image.get_width()
                     original_height = self.master_cum_image.get_height()
                     
@@ -474,20 +474,20 @@ class Effects:
                     scaled_surface.set_alpha(effect['alpha'])
                     screen.blit(scaled_surface, (new_x, new_y))
                     
-                    # Adicionar o texto "Ultimate Ready" abaixo do ícone
+                    # Add the "Ultimate Ready" text below the icon
                     if effect.get('show_text', False):
-                        font = pygame.font.SysFont(None, 36)  # Fonte e tamanho
-                        text_color = (255, 255, 0)  # Amarelo
+                        font = pygame.font.SysFont(None, 36)  # Font and size
+                        text_color = (255, 255, 0)  # Yellow
                         text_surface = font.render("Ultimate Ready", True, text_color)
                         
-                        # Aplicar o mesmo alpha ao texto
+                        # Apply the same alpha to the text
                         text_surface.set_alpha(effect['alpha'])
                         
-                        # Posicionar o texto centralizado abaixo do ícone
+                        # Position the text centered below the icon
                         text_x = new_x + (new_width - text_surface.get_width()) // 2
-                        text_y = new_y + new_height + 10  # 10 pixels abaixo do ícone
+                        text_y = new_y + new_height + 10  # 10 pixels below the icon
                         
-                        # Desenhar o texto
+                        # Draw the text
                         screen.blit(text_surface, (text_x, text_y))
                 else:
                     # Just apply alpha if no scaling info
@@ -495,20 +495,20 @@ class Effects:
                     img_copy.set_alpha(effect['alpha'])
                     screen.blit(img_copy, effect['position'])
                     
-                    # Adicionar o texto "Ultimate Ready" abaixo do ícone
+                    # Add the "Ultimate Ready" text below the icon
                     if effect.get('show_text', False):
-                        font = pygame.font.SysFont(None, 36)  # Fonte e tamanho
-                        text_color = (255, 255, 255)  # Branco
+                        font = pygame.font.SysFont(None, 36)  # Font and size
+                        text_color = (255, 255, 255)  # White
                         text_surface = font.render("Ultimate Ready", True, text_color)
                         
-                        # Aplicar o mesmo alpha ao texto
+                        # Apply the same alpha to the text
                         text_surface.set_alpha(effect['alpha'])
                         
-                        # Posicionar o texto centralizado abaixo do ícone
+                        # Position the text centered below the icon
                         text_x = effect['position'][0] + (self.ult_popup_image.get_width() - text_surface.get_width()) // 2
-                        text_y = effect['position'][1] + self.ult_popup_image.get_height() + 10  # 10 pixels abaixo do ícone
+                        text_y = effect['position'][1] + self.ult_popup_image.get_height() + 10  # 10 pixels below the icon
                         
-                        # Desenhar o texto
+                        # Draw the text
                         screen.blit(text_surface, (text_x, text_y))
 
             elif effect['type'] == 'ultimate_hud':
@@ -556,28 +556,28 @@ class Effects:
                     scaled_surface.set_alpha(effect['alpha'])
                     screen.blit(scaled_surface, (new_x, new_y))
                     
-                    # Adicionar o texto apropriado abaixo do ícone
+                    # Add the appropriate text below the icon
                     if effect.get('show_text', False):
-                        font = pygame.font.SysFont(None, 36)  # Fonte e tamanho
+                        font = pygame.font.SysFont(None, 36)  # Font and size
                         
-                        # Texto e cor dependem do estado da ultimate
+                        # Text and color depend on the ultimate state
                         if effect['is_ready']:
-                            text_color = (255, 255, 0)  # Amarelo para Ready
+                            text_color = (255, 255, 0)  # Yellow for Ready
                             text_content = "Ultimate Ready"
                         else:
-                            text_color = (200, 200, 200)  # Cinza claro para Not Ready
+                            text_color = (200, 200, 200)  # Light gray for Not Ready
                             text_content = "Ultimate Not Ready"
                         
                         text_surface = font.render(text_content, True, text_color)
                         
-                        # Aplicar o mesmo alpha ao texto
+                        # Apply the same alpha to the text
                         text_surface.set_alpha(effect['alpha'])
                         
-                        # Posicionar o texto centralizado abaixo do ícone
+                        # Position the text centered below the icon
                         text_x = new_x + (new_width - text_surface.get_width()) // 2
-                        text_y = new_y + new_height + 10  # 10 pixels abaixo do ícone
+                        text_y = new_y + new_height + 10  # 10 pixels below the icon
                         
-                        # Desenhar o texto
+                        # Draw the text
                         screen.blit(text_surface, (text_x, text_y))
                 else:
                     # Just apply alpha if no scaling info
@@ -585,26 +585,26 @@ class Effects:
                     img_copy.set_alpha(effect['alpha'])
                     screen.blit(img_copy, effect['position'])
                     
-                    # Adicionar o texto apropriado abaixo do ícone
+                    # Add the appropriate text below the icon
                     if effect.get('show_text', False):
-                        font = pygame.font.SysFont(None, 36)  # Fonte e tamanho
+                        font = pygame.font.SysFont(None, 36)  # Font and size
                         
-                        # Texto e cor dependem do estado da ultimate
+                        # Text and color depend on the ultimate state
                         if effect['is_ready']:
-                            text_color = (255, 255, 0)  # Amarelo para Ready
+                            text_color = (255, 255, 0)  # Yellow for Ready
                             text_content = "Ultimate Ready"
                         else:
-                            text_color = (200, 200, 200)  # Cinza claro para Not Ready
+                            text_color = (200, 200, 200)  # Light gray for Not Ready
                             text_content = "Ultimate Not Ready"
                             
                         text_surface = font.render(text_content, True, text_color)
                         
-                        # Aplicar o mesmo alpha ao texto
+                        # Apply the same alpha to the text
                         text_surface.set_alpha(effect['alpha'])
                         
-                        # Posicionar o texto alinhado com o ícone no canto superior direito
+                        # Position the text aligned with the icon in the top right corner
                         text_x = effect['position'][0]  # Alinhado à esquerda com o ícone
-                        text_y = effect['position'][1] + hud_image.get_height() + 5  # 5 pixels abaixo do ícone
+                        text_y = effect['position'][1] + hud_image.get_height() + 5  # 5 pixels below the icon
                         
-                        # Desenhar o texto
+                        # Draw the text
                         screen.blit(text_surface, (text_x, text_y))

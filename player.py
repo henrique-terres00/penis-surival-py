@@ -203,7 +203,7 @@ class Player:
         
         img = frames[self.anim_index % len(frames)]
         
-        # Desenha o jogador normalmente (sem efeito de brilho)
+        # Draw the player normally (without glow effect)
         surface.blit(img, (self.x, self.y))
             
         # Draw player damage popups

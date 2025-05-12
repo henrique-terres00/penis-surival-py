@@ -98,7 +98,8 @@ class GameState:
                         self.restart_callback()
                     elif self.gameover_index == 1:
                         self.set_state(GameState.MENU)
-
+                    elif self.gameover_index == 2:
+                        self.set_state('leave_game')
         elif self.state == 'settings':
             from game_sounds import GameSounds
             options = ['Music', 'Music Volume', 'Back']

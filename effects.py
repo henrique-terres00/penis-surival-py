@@ -145,9 +145,9 @@ class Effects:
             return False
         
     def add_milky_effect(self, duration=60, player_position=None):
-        #Adds the Milky effect to the active effects list.
+        # Adds the Milky effect to the active effects list.
         
-        #Args:
+        # Args:
         #    duration (int): Duration of the effect in frames (default: 60 frames = 1 second at 60 FPS)
         #    player_position (tuple): Player position (x, y)
         
@@ -184,13 +184,13 @@ class Effects:
         })
 
     def add_ultimate_hud(self, is_ready=False):
-        #Adds or updates the Ultimate HUD indicator.
-        #This creates a visual indicator showing if the ultimate ability is ready or not.
+        # Adds or updates the Ultimate HUD indicator.
+        # This creates a visual indicator showing if the ultimate ability is ready or not.
         
-        #Args:
+        # Args:
         #    is_ready (bool): Whether the ultimate is ready to use
         
-        #Load the images if they haven't been loaded yet
+        # Load the images if they haven't been loaded yet
         if self.ult_ready_hud_image is None or self.ult_not_ready_hud_image is None:
             if not self._load_ult_hud_images():
                 # Silently continue without HUD images
@@ -227,10 +227,10 @@ class Effects:
         })
     
     def add_master_cum_effect(self):
-        #Adds a central Master Cum effect to the screen.
-        #This creates a large, dramatic effect in the center of the screen.
+        # Adds a central Master Cum effect to the screen.
+        # This creates a large, dramatic effect in the center of the screen.
         
-        #Load the image if it hasn't been loaded yet
+        # Load the image if it hasn't been loaded yet
         if self.master_cum_image is None:
             self.master_cum_image = self._load_master_cum_image()
             
@@ -264,7 +264,7 @@ class Effects:
         #    player_position (tuple): Player position (x, y)
         #    direction (str): Direction the player is facing ('right' or 'left')
         
-        #Ensure the ultimate frames are loaded
+        # Ensure the ultimate frames are loaded
         if not self.ult_frames['right'] and not self.ult_frames['left']:
             self._load_ultimate_frames()
             
@@ -310,6 +310,7 @@ class Effects:
         # The effect area is based on the last frame (frame 4) which has the largest reach
         last_frame = frames[-1]
         last_frame_width = last_frame.get_width()
+        last_frame_height = last_frame.get_height()
         
         # Define the area of effect based on direction
         if direction == 'right':
@@ -318,6 +319,18 @@ class Effects:
         else:
             x_start = start_x - last_frame_width
             x_end = start_x
+            
+        # Define the vertical area of effect
+        y_top = start_y - (last_frame_height // 2)
+        y_bottom = start_y + (last_frame_height // 2)
+        
+        # Create a pygame.Rect for collision detection
+        if direction == 'right':
+            hitbox_rect = pygame.Rect(x_start, y_top, last_frame_width, last_frame_height)
+        else:
+            # For the left direction, we need to use x_start as the initial X position of the rectangle
+            # x_start is already calculated as start_x - last_frame_width, which is the correct position
+            hitbox_rect = pygame.Rect(x_start, y_top, last_frame_width, last_frame_height)
             
         # Add the effect to the list
         self.effects.append({
@@ -331,7 +344,11 @@ class Effects:
                 'direction': direction,
                 'x_start': x_start,
                 'x_end': x_end,
-                'y_center': start_y
+                'y_center': start_y,
+                'y_top': y_top,
+                'y_bottom': y_bottom,
+                'height': last_frame_height,
+                'hitbox_rect': hitbox_rect  # Add the pygame.Rect for collision detection
             }
         })
             
@@ -381,6 +398,8 @@ class Effects:
         # Draws all active effects on the screen.
         
         for effect in self.effects:
+            
+            # Draw the actual effect
             if effect['type'] == 'milky' and self.milky_image:
                 # Check if the position exists in the effect
                 if 'position' not in effect:
@@ -424,14 +443,14 @@ class Effects:
                     original_width = self.master_cum_image.get_width()
                     original_height = self.master_cum_image.get_height()
                     
-                    # Calcular as novas dimensões mantendo a proporção
+                    # Calculate the new dimensions while maintaining the aspect ratio
                     new_width = int(original_width * effect['scale'])
                     new_height = int(original_height * effect['scale'])
                     
-                    # Redimensionar a imagem mantendo a proporção original
+                    # Rescale the image while maintaining the original aspect ratio
                     scaled_surface = pygame.transform.scale(self.master_cum_image, (new_width, new_height))
                     
-                    # Ajustar a posição para manter centralizado
+                    # Adjust the position to keep it centered
                     x, y = effect['position']
                     center_x = x + original_width // 2
                     center_y = y + original_height // 2

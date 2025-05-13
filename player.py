@@ -3,7 +3,10 @@ import pygame
 from settings import SCREEN_WIDTH, SCREEN_HEIGHT
 
 def load_player_frames():
+    # Base directory for player assets
     player_dir = os.path.join('assets', 'player')
+    
+    # Initialize dictionary for all player actions
     actions = {
         'walk_right': [],
         'walk_left': [],
@@ -11,12 +14,45 @@ def load_player_frames():
         'attack_right': [],
         'attack_left': []
     }
-    for action in actions:
-        for i in range(1, 5):
-            path = os.path.join(player_dir, f'{action}_{i}.png')
-            img = pygame.image.load(path).convert_alpha()
-            img = pygame.transform.scale(img, (180, 180))
-            actions[action].append(img)
+    
+    # Load walk animations from walk subfolder
+    walk_dir = os.path.join(player_dir, 'walk')
+    for i in range(1, 5):
+        # Load walk right frames
+        path = os.path.join(walk_dir, f'walk_right_{i}.png')
+        img = pygame.image.load(path).convert_alpha()
+        img = pygame.transform.scale(img, (180, 180))
+        actions['walk_right'].append(img)
+        
+        # Load walk left frames
+        path = os.path.join(walk_dir, f'walk_left_{i}.png')
+        img = pygame.image.load(path).convert_alpha()
+        img = pygame.transform.scale(img, (180, 180))
+        actions['walk_left'].append(img)
+    
+    # Load jump animations from jump subfolder
+    jump_dir = os.path.join(player_dir, 'jump')
+    for i in range(1, 5):
+        path = os.path.join(jump_dir, f'jump_{i}.png')
+        img = pygame.image.load(path).convert_alpha()
+        img = pygame.transform.scale(img, (180, 180))
+        actions['jump'].append(img)
+    
+    # Load attack animations from base_attack subfolder
+    attack_dir = os.path.join(player_dir, 'base_attack')
+    for i in range(1, 5):
+        # Load attack right frames
+        path = os.path.join(attack_dir, f'attack_right_{i}.png')
+        img = pygame.image.load(path).convert_alpha()
+        img = pygame.transform.scale(img, (180, 180))
+        actions['attack_right'].append(img)
+        
+        # Load attack left frames
+        path = os.path.join(attack_dir, f'attack_left_{i}.png')
+        img = pygame.image.load(path).convert_alpha()
+        img = pygame.transform.scale(img, (180, 180))
+        actions['attack_left'].append(img)
+    
     return actions
 
 # --- Player class: manages attributes, input, damage, and drawing ---
@@ -44,7 +80,7 @@ class Player:
         self.ultimate_cooldown = 0
         self.ultimate_active = False
         self.ultimate_duration = 0
-        self.mana = 0
+        self.mana = 100
         self.max_mana = 100
 
     def handle_input(self, keys):
@@ -96,7 +132,7 @@ class Player:
             self.ultimate_duration -= 1
             if self.ultimate_duration <= 0:
                 self.ultimate_active = False
-                print("Ultimate ability ended")
+                # Ultimate ability has ended
                 
         # Update cooldowns
         if self.ultimate_cooldown > 0:
@@ -162,7 +198,7 @@ class Player:
         if self.mana < self.max_mana:
             return  # Not enough mana
             
-        print("Ultimate ability activated!")
+        # Ultimate ability has been activated
         
         # Consume all mana
         self.mana = 0

@@ -6,26 +6,36 @@ from settings import SCREEN_WIDTH, SCREEN_HEIGHT
 ENEMY_SIZE = (180, 180)
 
 
-def load_enemy_frames(enemy_name, left_count, right_count, dead_name):
+def load_enemy_frames(enemy_name, left_count, right_count, dead_name, subfolder=None):
+    # Base directory for enemies
     enemy_dir = os.path.join('assets', 'enemies')
+    
+    # If a subfolder is specified, add it to the path
+    if subfolder:
+        enemy_dir = os.path.join(enemy_dir, subfolder)
+    
     frames = {
         'left': [],
         'right': [],
         'dead': None
     }
+    
     for i in range(1, left_count + 1):
         path = os.path.join(enemy_dir, f'{enemy_name}_left_{i}.png')
         img = pygame.image.load(path).convert_alpha()
         img = pygame.transform.scale(img, ENEMY_SIZE)
         frames['left'].append(img)
+    
     for i in range(1, right_count + 1):
         path = os.path.join(enemy_dir, f'{enemy_name}_right_{i}.png')
         img = pygame.image.load(path).convert_alpha()
         img = pygame.transform.scale(img, ENEMY_SIZE)
         frames['right'].append(img)
+    
     dead_path = os.path.join(enemy_dir, dead_name + '.png')
     frames['dead'] = pygame.image.load(dead_path).convert_alpha()
     frames['dead'] = pygame.transform.scale(frames['dead'], ENEMY_SIZE)
+    
     return frames
 
 # --- Enemy base class: logic, damage, drawing, and death ---
@@ -110,34 +120,25 @@ class Enemy:
 
 class FatGirlEnemy(Enemy):
     def __init__(self, x, y, direction, speed=3, dmg_min=3, dmg_max=11):
-        frames = load_enemy_frames('fat_girl', 3, 3, 'dead_fat_girl')
+        # Use the 'fat_girl' subfolder for this enemy type
+        frames = load_enemy_frames('fat_girl', 3, 3, 'dead_fat_girl', subfolder='fat_girl')
         super().__init__(x, y, direction, frames, max_hp=10, speed=speed)
         self.dmg_min = dmg_min
         self.dmg_max = dmg_max
 
 class WolfEnemy(Enemy):
     def __init__(self, x, y, direction, speed=6, dmg_min=1, dmg_max=7):
-        frames = load_enemy_frames('wolf', 4, 4, 'dead_wolf')
+        # Use the 'wolf' subfolder for this enemy type
+        frames = load_enemy_frames('wolf', 4, 4, 'dead_wolf', subfolder='wolf')
         super().__init__(x, y, direction, frames, max_hp=5, speed=speed)
         self.dmg_min = dmg_min
         self.dmg_max = dmg_max
 
 class BirdEnemy(Enemy):
-    def __init__(self, bird_name, x, y, direction, speed=7, dmg_min=2, dmg_max=6):
-        # Load frames
-        frames = {'left': [], 'right': [], 'dead': None}
-        enemy_dir = os.path.join('assets', 'enemies')
-        for i in range(1, 5):
-            img_left = pygame.image.load(os.path.join(enemy_dir, f'{bird_name}_left_{i}.png')).convert_alpha()
-            img_left = pygame.transform.scale(img_left, ENEMY_SIZE)
-            frames['left'].append(img_left)
-            img_right = pygame.image.load(os.path.join(enemy_dir, f'{bird_name}_right_{i}.png')).convert_alpha()
-            img_right = pygame.transform.scale(img_right, ENEMY_SIZE)
-            frames['right'].append(img_right)
-        # Load dead frame
-        dead_img = pygame.image.load(os.path.join(enemy_dir, f'dead_{bird_name}.png')).convert_alpha()
-        dead_img = pygame.transform.scale(dead_img, ENEMY_SIZE)
-        frames['dead'] = dead_img
+    def __init__(self, bird_name, x, y, direction, speed=7, dmg_min=2, dmg_max=6, subfolder=None):
+        # Load frames using the load_enemy_frames function with optional subfolder
+        frames = load_enemy_frames(bird_name, 4, 4, f'dead_{bird_name}', subfolder)
+        
         super().__init__(x, y, direction, frames, max_hp=5, speed=speed)
         self.dmg_min = dmg_min
         self.dmg_max = dmg_max
@@ -177,8 +178,10 @@ class BirdEnemy(Enemy):
 
 class BlueBirdEnemy(BirdEnemy):
     def __init__(self, x, y, direction, speed=7, dmg_min=2, dmg_max=6):
-        super().__init__('blue_bird', x, y, direction, speed, dmg_min, dmg_max)
+        # Use the 'blue_bird' subfolder for this enemy type
+        super().__init__('blue_bird', x, y, direction, speed, dmg_min, dmg_max, subfolder='blue_bird')
 
 class RedBirdEnemy(BirdEnemy):
     def __init__(self, x, y, direction, speed=7, dmg_min=2, dmg_max=6):
-        super().__init__('red_bird', x, y, direction, speed, dmg_min, dmg_max)
+        # Use the 'red_bird' subfolder for this enemy type
+        super().__init__('red_bird', x, y, direction, speed, dmg_min, dmg_max, subfolder='red_bird')

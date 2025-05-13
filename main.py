@@ -12,7 +12,7 @@ from effects import Effects
 
 from background import ParallaxBackground
 
-BACKGROUND_DIR = os.path.join('assets', 'background')
+BACKGROUND_DIR = os.path.join('assets', 'background', 'jungle')
 
 def handle_events(game_state, restart_flag):
     for event in pygame.event.get():
@@ -84,7 +84,7 @@ def update_game(player, spawner, enemies, kills, game_state, effects):
             if ultimate_range == 0:
                 ultimate_range = 400  # Default value in case unable to get the frame size
                 
-            print(f"Ultimate range: {ultimate_range} pixels")
+            # Ultimate range calculation complete
             
             for enemy in enemies:
                 if enemy.state != 'dead':
@@ -113,7 +113,7 @@ def update_game(player, spawner, enemies, kills, game_state, effects):
                         # We no longer add the milky effect for enemies killed by the ultimate
             
             # Print debug info about enemies hit
-            print(f"Ultimate hit {enemies_hit} enemies in the {ultimate_direction} direction")
+            # Ultimate hit enemies in the specified direction
             
             # Reset the flag so we don't apply damage again
             player.ultimate_damage_pending = False
@@ -146,7 +146,8 @@ def update_game(player, spawner, enemies, kills, game_state, effects):
                     # We no longer add the milky effect for enemies killed by the ultimate
         
         if enemies_hit > 0:
-            print(f"Ultimate caught {enemies_hit} enemies entering the effect area!")
+            # Ultimate caught enemies entering the effect area
+            pass
     
     # Enemy collisions - player is invulnerable during ultimate
     player_hitbox = get_player_hitbox(player)

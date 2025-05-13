@@ -86,27 +86,53 @@ def update_game(player, spawner, enemies, kills, game_state, effects, potions):
             if ultimate_range == 0:
                 ultimate_range = 400  # Default value in case unable to get the frame size
                 
-            # Ultimate range calculation complete
+            # Get the ultimate effect area from the effects list
+            ultimate_effect_area = None
+            for effect in effects.effects:
+                if effect['type'] == 'ultimate_animated':
+                    ultimate_effect_area = effect.get('effect_area')
+                    break
             
+            # If we couldn't find the effect area, create a default one based on the calculated range
+            if not ultimate_effect_area:
+                # Create a default effect area
+                ultimate_effect_area = {
+                    'direction': ultimate_direction,
+                    'x_start': player_centerx if ultimate_direction == 'left' else player_centerx,
+                    'x_end': player_centerx - ultimate_range if ultimate_direction == 'left' else player_centerx + ultimate_range,
+                    'y_top': player_centery - 90,  # Approximate height of the player
+                    'y_bottom': player_centery + 90
+                }
+                
+            # Use the full effect area (horizontal and vertical) with proper hitbox collision
             for enemy in enemies:
                 if enemy.state != 'dead':
-
-                    # Calculate the center of the enemy
-                    enemy_centerx = enemy.x + (enemy.width // 2 if hasattr(enemy, 'width') else 90)
-                    enemy_centery = enemy.y + (enemy.height // 2 if hasattr(enemy, 'height') else 90)
+                    # Get enemy dimensions
+                    enemy_width = getattr(enemy, 'width', 180)  # ENEMY_SIZE[0]
+                    enemy_height = getattr(enemy, 'height', 180)  # ENEMY_SIZE[1]
+                    
+                    # Create a pygame.Rect for the enemy's hitbox
+                    enemy_rect = pygame.Rect(enemy.x, enemy.y, enemy_width, enemy_height)
                     
                     # Check if the enemy is in the correct direction
+                    enemy_centerx = enemy.x + (enemy_width // 2)
                     is_to_right = enemy_centerx > player_centerx
                     is_to_left = enemy_centerx < player_centerx
                     
-                    # Calculate the horizontal distance between the player and the enemy
-                    horizontal_distance = abs(enemy_centerx - player_centerx)
+                    # Only check collision if the enemy is in the correct direction
+                    correct_direction = (ultimate_direction == 'right' and is_to_right) or \
+                                       (ultimate_direction == 'left' and is_to_left)
                     
-                    # Check if the enemy is within range and in the correct direction
-                    if ((ultimate_direction == 'right' and is_to_right) or 
-                        (ultimate_direction == 'left' and is_to_left)) and \
-                       horizontal_distance <= ultimate_range:
+                    # Check for collision using pygame.Rect.colliderect
+                    collision_detected = False
+                    if correct_direction and 'hitbox_rect' in ultimate_effect_area:
+                        # Use the hitbox_rect for collision detection
+                        collision_detected = ultimate_effect_area['hitbox_rect'].colliderect(enemy_rect)
                         
+                        # Debug information removed
+                    
+                    # Check if the enemy is within the effect area
+                    if collision_detected:
                         # Ultimate deals significant damage
                         ultimate_dmg = 50  # Fatal damage for enemies within range
                         enemy.take_damage(ultimate_dmg)
@@ -120,36 +146,8 @@ def update_game(player, spawner, enemies, kills, game_state, effects, potions):
             # Reset the flag so we don't apply damage again
             player.ultimate_damage_pending = False
     
-    # Check if there are active ultimate effects and if enemies entered the effect area
-    active_ultimate_effects = [effect for effect in effects.effects 
-                              if effect['type'] == 'ultimate_animated' and 'effect_area' in effect]
-    
-    # If there are active ultimate effects, check for enemies entering the area
-    for effect in active_ultimate_effects:
-        effect_area = effect['effect_area']
-        direction = effect_area['direction']
-        enemies_hit = 0
-        
-        for enemy in enemies:
-            if enemy.state != 'dead':
-                # Calculate the center of the enemy
-                enemy_centerx = enemy.x + (enemy.width // 2 if hasattr(enemy, 'width') else 90)
-                
-                # Check if the enemy is within the effect area
-                is_in_effect_area = (enemy_centerx >= effect_area['x_start'] and 
-                                    enemy_centerx <= effect_area['x_end'])
-                
-                if is_in_effect_area:
-                    # Ultimate deals significant damage to enemies that enter the effect area
-                    ultimate_dmg = 50  # Fatal damage
-                    enemy.take_damage(ultimate_dmg)
-                    enemies_hit += 1
-                    
-                    # We no longer add the milky effect for enemies killed by the ultimate
-        
-        if enemies_hit > 0:
-            # Ultimate caught enemies entering the effect area
-            pass
+    # We removed the second collision check for the Ultimate to simplify the code
+    # The first check (when the Ultimate is activated) is already sufficient for the desired effect
     
     # Enemy collisions - player is invulnerable during ultimate
     player_hitbox = get_player_hitbox(player)

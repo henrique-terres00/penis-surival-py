@@ -103,24 +103,29 @@ class Enemy:
             self.dead_timer = 0
             self.fade_alpha = 255
 
-    def draw(self, surface):
-        from hud import draw_health_bar, draw_damage_popups
-        # Fade out if dead
-        if self.state == 'dead' and hasattr(self, 'fade_alpha'):
-            dead_img = self.frames['dead'].copy()
-            dead_img.set_alpha(self.fade_alpha)
-            surface.blit(dead_img, (self.x, self.y))
-        elif self.state == 'dead':
-            surface.blit(self.frames['dead'], (self.x, self.y))
+    def draw(self, screen):
+        # Draws the enemy on the screen.
+        
+        if self.state == 'dead':
+            if self.frames['dead']:
+                dead_img = self.frames['dead']
+                if hasattr(self, 'fade_alpha'):
+                    # Create a copy of the image with adjusted alpha
+                    dead_img = dead_img.copy()
+                    alpha_img = pygame.Surface(dead_img.get_size(), pygame.SRCALPHA)
+                    alpha_img.fill((255, 255, 255, self.fade_alpha))
+                    dead_img.blit(alpha_img, (0, 0), special_flags=pygame.BLEND_RGBA_MULT)
+                screen.blit(dead_img, (self.x, self.y))
         else:
-            frames = self.frames[self.direction]
-            img = frames[self.anim_index % len(frames)]
-            surface.blit(img, (self.x, self.y))
+            current_frame = self.frames[self.direction][self.anim_index]
+            screen.blit(current_frame, (self.x, self.y))
         # Health bar
         if self.state != 'dead':
-            draw_health_bar(surface, self.x+30, self.y-10, 100, 14, self.hp, self.max_hp)
+            from hud import draw_health_bar
+            draw_health_bar(screen, self.x+30, self.y-10, 100, 14, self.hp, self.max_hp)
         # Damage popups
-        draw_damage_popups(surface, self.damage_popups)
+        from hud import draw_damage_popups
+        draw_damage_popups(screen, self.damage_popups)
 
 class FatGirlEnemy(Enemy):
     def __init__(self, x, y, direction, speed=3, dmg_min=3, dmg_max=11):

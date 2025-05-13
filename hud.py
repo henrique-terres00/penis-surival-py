@@ -49,11 +49,16 @@ def draw_damage_popups(surface, popups):
             # Popup format: [value, x, y, alpha, timer, type]
             dmg, x, y, alpha, timer, popup_type = popup
             
-            # Define the color based on the popup type (damage or heal)
+            # Define the color based on the popup type (damage, heal, or mana)
             if popup_type == "heal":
                 # Green for heal
                 color = (0, 255, 0)
                 # Adds a '+' before the value to indicate healing
+                text = font.render("+" + str(dmg), True, color)
+            elif popup_type == "mana":
+                # Blue for mana
+                color = (0, 100, 255)
+                # Adds a '+' before the value to indicate mana gain
                 text = font.render("+" + str(dmg), True, color)
             else:
                 # Red for damage

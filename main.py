@@ -9,6 +9,8 @@ from game_state import GameState
 from hitboxes import get_player_hitbox, get_enemy_hitbox, get_attack_hitbox
 from game_sounds import GameSounds
 from effects import Effects
+from health_potion import HealthPotion
+from mana_potion import ManaPotion
 
 from background import ParallaxBackground
 
@@ -24,7 +26,7 @@ def handle_events(game_state, restart_flag):
     return None
 
 
-def update_game(player, spawner, enemies, kills, game_state, effects):
+def update_game(player, spawner, enemies, kills, game_state, effects, potions):
     # Player input and update
     keys = pygame.key.get_pressed()
     player.handle_input(keys)
@@ -192,13 +194,58 @@ def update_game(player, spawner, enemies, kills, game_state, effects):
                             player.mana = min(player.max_mana, player.mana + 12)
     else:
         player.attack_hit_set = set()
+        
+    # Check for dead enemies to drop items
+    for enemy in enemies:
+        if enemy.state == 'dead' and enemy.drop_type and not enemy.item_dropped:
+            # Check drop chance
+            if random.random() <= enemy.drop_chance:
+                # Create the appropriate item at the enemy's position
+                drop_x = enemy.x + 70  # Adjust position to the center of the enemy
+                drop_y = enemy.y + 70
+                
+                if enemy.drop_type == 'health_potion':
+                    item = HealthPotion(drop_x, drop_y)
+                    potions.append(item)
+                elif enemy.drop_type == 'mana_potion':
+                    item = ManaPotion(drop_x, drop_y)
+                    potions.append(item)
+                    
+            enemy.item_dropped = True
+            
+    # Update potions and other items
+    for item in potions[:]:  # Use a copy of the list to be able to remove items during iteration
+        item.update()
+        
+        # Check collision with the player
+        player_hitbox = get_player_hitbox(player)
+        if item.can_collect() and player_hitbox.colliderect(item.rect):
+            # Player collects the item
+            if isinstance(item, HealthPotion):
+                # Health potion
+                heal_amount = item.collect()
+                player.hp = min(player.max_hp, player.hp + heal_amount)
+                # Add "HEAL" text effect at the potion's position
+                player.damage_popups.append([f"{heal_amount}", item.x, item.y - 30, 255, 0, "heal"])
+            elif isinstance(item, ManaPotion):
+                # Mana potion
+                mana_amount = item.collect()
+                player.mana = min(player.max_mana, player.mana + mana_amount)
+                # Add "MANA" text effect at the potion's position
+                player.damage_popups.append([f"{mana_amount}", item.x, item.y - 30, 255, 0, "mana"])
+            
+            # Remove item after being collected
+            potions.remove(item)
 
 
-def draw_game(screen, background, player, enemies, hud, elapsed_time, kills, effects):
+def draw_game(screen, background, player, enemies, hud, elapsed_time, kills, effects, potions):
     background.update()
     background.draw(screen)
     for enemy in enemies:
         enemy.draw(screen)
+    # Draw potions before the player so the player is on top
+    for potion in potions:
+        potion.draw(screen)
     player.draw(screen)
     hud.draw_hud(screen, player, int(elapsed_time), kills)
     # Draw visual effects on top of everything
@@ -225,6 +272,7 @@ def main(start_playing=False):
     background = ParallaxBackground(BACKGROUND_DIR)
     player = Player()
     enemies = []
+    potions = []  # List to store health potions
     spawner = Spawner()
     game_state = GameState()
     effects = Effects()  # Initialize the visual effects manager
@@ -256,6 +304,7 @@ def main(start_playing=False):
             if game_state.state == GameState.MENU:
                 player = Player()
                 enemies = []
+                potions = []  # Reset health potions
                 spawner = Spawner()
                 kills = [0]
                 elapsed_time = 0
@@ -269,10 +318,10 @@ def main(start_playing=False):
 
         # --- MAIN GAMEPLAY ---
         if game_state.state == GameState.PLAYING:
-            update_game(player, spawner, enemies, kills, game_state, effects)
+            update_game(player, spawner, enemies, kills, game_state, effects, potions)
             effects.update()  # Update the visual effects
             elapsed_time += 1/FPS if FPS else 1/60
-            draw_game(screen, background, player, enemies, hud, elapsed_time, kills[0], effects)
+            draw_game(screen, background, player, enemies, hud, elapsed_time, kills[0], effects, potions)
             # Save kills/time for game over
             if player.hp <= 0 and game_state.state != 'game_over':
                 game_state.last_kills = kills[0]

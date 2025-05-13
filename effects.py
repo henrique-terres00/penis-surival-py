@@ -17,7 +17,7 @@ class Effects:
         # We delay loading the image to ensure pygame is initialized
     
     def _load_milky_image(self):
-        """Loads the Milky effect image."""
+        # Loads the Milky effect image.
         try:
             # Use the text_effects subfolder
             image_path = os.path.join('assets', 'effects', 'text_effects', 'milky.png')
@@ -29,9 +29,8 @@ class Effects:
             return None
             
     def _load_ult_hud_images(self):
-        """Loads the Ultimate Ready and Not Ready HUD images.
-        These images are displayed to show the status of the ultimate ability.
-        """
+        # Loads the Ultimate Ready and Not Ready HUD images.
+        # These images are displayed to show the status of the ultimate ability.
         try:
             # Use the ultimate_hud subfolder
             ult_hud_dir = os.path.join('assets', 'effects', 'ultimate_hud')
@@ -52,9 +51,8 @@ class Effects:
             return False
             
     def _load_master_cum_image(self):
-        """Loads the Master Cum effect image for the central ultimate effect.
-        Preserves the original aspect ratio of the image.
-        """
+        # Loads the Master Cum effect image for the central ultimate effect.
+        # Preserves the original aspect ratio of the image.
         try:
             # Use the text_effects subfolder
             image_path = os.path.join('assets', 'effects', 'text_effects', 'master_cum.png')
@@ -83,9 +81,8 @@ class Effects:
             return None
             
     def _load_ultimate_frames(self):
-        """Loads the Ultimate ability animation frames for both directions.
-        Preserves the natural size and proportions of the original PNGs.
-        """
+        # Loads the Ultimate ability animation frames for both directions.
+        # Preserves the natural size and proportions of the original PNGs.
         try:
             # Use the ultimate_animation subfolder
             ult_anim_dir = os.path.join('assets', 'effects', 'ultimate_animation')
@@ -148,13 +145,13 @@ class Effects:
             return False
         
     def add_milky_effect(self, duration=60, player_position=None):
-        """Adds the Milky effect to the active effects list.
+        #Adds the Milky effect to the active effects list.
         
-        Args:
-            duration (int): Duration of the effect in frames (default: 60 frames = 1 second at 60 FPS)
-            player_position (tuple): Player position (x, y)
-        """
-        # Parameter validation
+        #Args:
+        #    duration (int): Duration of the effect in frames (default: 60 frames = 1 second at 60 FPS)
+        #    player_position (tuple): Player position (x, y)
+        
+        #Parameter validation
         if player_position is None:
             return
             
@@ -187,13 +184,13 @@ class Effects:
         })
 
     def add_ultimate_hud(self, is_ready=False):
-        """Adds or updates the Ultimate HUD indicator.
-        This creates a visual indicator showing if the ultimate ability is ready or not.
+        #Adds or updates the Ultimate HUD indicator.
+        #This creates a visual indicator showing if the ultimate ability is ready or not.
         
-        Args:
-            is_ready (bool): Whether the ultimate is ready to use
-        """
-        # Load the images if they haven't been loaded yet
+        #Args:
+        #    is_ready (bool): Whether the ultimate is ready to use
+        
+        #Load the images if they haven't been loaded yet
         if self.ult_ready_hud_image is None or self.ult_not_ready_hud_image is None:
             if not self._load_ult_hud_images():
                 # Silently continue without HUD images
@@ -230,10 +227,10 @@ class Effects:
         })
     
     def add_master_cum_effect(self):
-        """Adds a central Master Cum effect to the screen.
-        This creates a large, dramatic effect in the center of the screen.
-        """
-        # Load the image if it hasn't been loaded yet
+        #Adds a central Master Cum effect to the screen.
+        #This creates a large, dramatic effect in the center of the screen.
+        
+        #Load the image if it hasn't been loaded yet
         if self.master_cum_image is None:
             self.master_cum_image = self._load_master_cum_image()
             
@@ -260,14 +257,14 @@ class Effects:
         })
         
     def add_ultimate_effect(self, player_position, direction='right'):
-        """Adds the Ultimate ability effect to the active effects list.
-        This creates a directional effect based on the player's facing direction.
+        # Adds the Ultimate ability effect to the active effects list.
+        # This creates a directional effect based on the player's facing direction.
         
-        Args:
-            player_position (tuple): Player position (x, y)
-            direction (str): Direction the player is facing ('right' or 'left')
-        """
-        # Ensure the ultimate frames are loaded
+        # Args:
+        #    player_position (tuple): Player position (x, y)
+        #    direction (str): Direction the player is facing ('right' or 'left')
+        
+        #Ensure the ultimate frames are loaded
         if not self.ult_frames['right'] and not self.ult_frames['left']:
             self._load_ultimate_frames()
             
@@ -339,7 +336,8 @@ class Effects:
         })
             
     def update(self):
-        """Updates all active effects."""
+        # Updates all active effects.
+        
         effects_to_remove = []
         
         for i, effect in enumerate(self.effects):
@@ -380,7 +378,8 @@ class Effects:
                 self.effects.pop(i)
     
     def draw(self, screen):
-        """Draws all active effects on the screen."""
+        # Draws all active effects on the screen.
+        
         for effect in self.effects:
             if effect['type'] == 'milky' and self.milky_image:
                 # Check if the position exists in the effect
@@ -500,18 +499,6 @@ class Effects:
                         # Position the text centered below the icon
                         text_x = new_x + (new_width - text_surface.get_width()) // 2
                         text_y = new_y + new_height + 10  # 10 pixels below the icon
-                        
-                        # Draw the text
-                        screen.blit(text_surface, (text_x, text_y))
-                else:
-                    # Just apply alpha if no scaling info
-                    img_copy = self.ult_popup_image.copy()
-                    img_copy.set_alpha(effect['alpha'])
-                    screen.blit(img_copy, effect['position'])
-                    
-                    # Add the "Ultimate Ready" text below the icon
-                    if effect.get('show_text', False):
-                        font = pygame.font.SysFont(None, 36)  # Font and size
                         text_color = (255, 255, 255)  # White
                         text_surface = font.render("Ultimate Ready", True, text_color)
                         

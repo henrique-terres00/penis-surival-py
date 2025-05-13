@@ -56,6 +56,10 @@ class Enemy:
         self.speed = speed
         self.rect = pygame.Rect(self.x + 30, self.y + 40, 100, 120)
         self.dead_timer = 0
+        # Sistema de drops genérico
+        self.drop_type = None  # Tipo de item que o inimigo dropa (None, 'health_potion', 'mana_potion', etc)
+        self.drop_chance = 1.0  # Chance de dropar o item (1.0 = 100%)
+        self.item_dropped = False  # Indica se já dropou o item
 
     def update(self, player):
         from hud import update_damage_popups
@@ -180,8 +184,11 @@ class BlueBirdEnemy(BirdEnemy):
     def __init__(self, x, y, direction, speed=7, dmg_min=2, dmg_max=6):
         # Use the 'blue_bird' subfolder for this enemy type
         super().__init__('blue_bird', x, y, direction, speed, dmg_min, dmg_max, subfolder='blue_bird')
+        self.drop_type = 'mana_potion'  # Blue birds drop mana potions when they die
+        self.drop_chance = 1.0  # 100% chance to drop
 
 class RedBirdEnemy(BirdEnemy):
     def __init__(self, x, y, direction, speed=7, dmg_min=2, dmg_max=6):
         # Use the 'red_bird' subfolder for this enemy type
         super().__init__('red_bird', x, y, direction, speed, dmg_min, dmg_max, subfolder='red_bird')
+        self.drop_type = 'health_potion'  # Red birds drop health potions when they die

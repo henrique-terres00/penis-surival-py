@@ -19,7 +19,8 @@ class Effects:
     def _load_milky_image(self):
         """Loads the Milky effect image."""
         try:
-            image_path = os.path.join('assets', 'effects', 'milky.png')
+            # Use the text_effects subfolder
+            image_path = os.path.join('assets', 'effects', 'text_effects', 'milky.png')
             image = pygame.image.load(image_path).convert_alpha()
             # Resize the image to a smaller size (150x150 pixels)
             return pygame.transform.scale(image, (150, 150))
@@ -32,13 +33,16 @@ class Effects:
         These images are displayed to show the status of the ultimate ability.
         """
         try:
+            # Use the ultimate_hud subfolder
+            ult_hud_dir = os.path.join('assets', 'effects', 'ultimate_hud')
+            
             # Load Ultimate Ready image
-            ready_path = os.path.join('assets', 'effects', 'ult_ready_hud.png')
+            ready_path = os.path.join(ult_hud_dir, 'ult_ready_hud.png')
             ready_image = pygame.image.load(ready_path).convert_alpha()
             self.ult_ready_hud_image = pygame.transform.scale(ready_image, (200, 200))
             
             # Load Ultimate Not Ready image
-            not_ready_path = os.path.join('assets', 'effects', 'ult_not_ready_hud.png')
+            not_ready_path = os.path.join(ult_hud_dir, 'ult_not_ready_hud.png')
             not_ready_image = pygame.image.load(not_ready_path).convert_alpha()
             self.ult_not_ready_hud_image = pygame.transform.scale(not_ready_image, (200, 200))
             
@@ -52,7 +56,8 @@ class Effects:
         Preserves the original aspect ratio of the image.
         """
         try:
-            image_path = os.path.join('assets', 'effects', 'master_cum.png')
+            # Use the text_effects subfolder
+            image_path = os.path.join('assets', 'effects', 'text_effects', 'master_cum.png')
             original_image = pygame.image.load(image_path).convert_alpha()
             
             # Get the original dimensions
@@ -69,16 +74,8 @@ class Effects:
             # Ensure the height is at least 180 pixels for better visualization
             target_height = max(180, int(target_width / aspect_ratio))
             
-            # Print information about dimensions for debugging
-            print(f"Original dimensions: {original_width}x{original_height}, aspect ratio: {aspect_ratio}")
-            print(f"Scaled dimensions: {target_width}x{target_height}")
-            
             # Redimensionar a imagem mantendo a proporção original
             scaled_image = pygame.transform.scale(original_image, (target_width, target_height))
-            
-            # Check if the resized image has the correct aspect ratio
-            actual_aspect = scaled_image.get_width() / scaled_image.get_height()
-            print(f"Actual aspect ratio after scaling: {actual_aspect}")
             
             return scaled_image
         except Exception as e:
@@ -90,13 +87,27 @@ class Effects:
         Preserves the natural size and proportions of the original PNGs.
         """
         try:
+            # Use the ultimate_animation subfolder
+            ult_anim_dir = os.path.join('assets', 'effects', 'ultimate_animation')
+            
+            # Try to load the popup image if it exists
+            # If not, we'll continue without it as it's not critical for the animation
+            popup_path = os.path.join(ult_anim_dir, 'ult_popup.png')
+            if os.path.exists(popup_path):
+                self.ult_popup_image = pygame.image.load(popup_path).convert_alpha()
+            else:
+                self.ult_popup_image = None
+            
             # Fator de escala base para ajustar o tamanho geral dos efeitos
             # Usando um valor moderado para o tamanho do efeito
             scale_factor = 2
             
             # Load right direction frames
             for i in range(1, 5):
-                image_path = os.path.join('assets', 'effects', f'ult_right_{i}.png')
+                image_path = os.path.join(ult_anim_dir, f'ult_right_{i}.png')
+                if not os.path.exists(image_path):
+                    continue
+                    
                 original_image = pygame.image.load(image_path).convert_alpha()
                 
                 # Obter o tamanho original da imagem
@@ -113,7 +124,10 @@ class Effects:
                 
             # Load left direction frames
             for i in range(1, 5):
-                image_path = os.path.join('assets', 'effects', f'ult_left_{i}.png')
+                image_path = os.path.join(ult_anim_dir, f'ult_left_{i}.png')
+                if not os.path.exists(image_path):
+                    continue
+                    
                 original_image = pygame.image.load(image_path).convert_alpha()
                 
                 # Obter o tamanho original da imagem
@@ -182,7 +196,7 @@ class Effects:
         # Load the images if they haven't been loaded yet
         if self.ult_ready_hud_image is None or self.ult_not_ready_hud_image is None:
             if not self._load_ult_hud_images():
-                print("Erro ao carregar as imagens do Ultimate HUD!")
+                # Silently continue without HUD images
                 return
         
         # Calculate the position for the effect (canto superior direito da tela)
@@ -224,7 +238,7 @@ class Effects:
             self.master_cum_image = self._load_master_cum_image()
             
         if self.master_cum_image is None:
-            print("Erro ao carregar a imagem do Master Cum!")
+            # Silently continue without Master Cum image
             return
             
         # Calculate the position for the effect (centered horizontally, higher vertically)

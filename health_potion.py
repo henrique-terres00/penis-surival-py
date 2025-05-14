@@ -66,10 +66,6 @@ class HealthPotion:
         
         # Draw the potion
         surface.blit(self.frames[self.current_frame], (self.x, self.y))
-        
-        # Debug: Draw a small indicator when the potion is collectable
-        if self.collectable:
-            pygame.draw.rect(surface, (0, 255, 0), (self.x, self.y - 5, 5, 5))  # Green square when collectable
     
     def collect(self):
         #Marks the potion as collected.

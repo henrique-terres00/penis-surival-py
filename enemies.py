@@ -49,6 +49,8 @@ class Enemy:
         self.frames = frames
         self.state = 'walk'  # 'walk' or 'dead'
         self.anim_index = 0
+        self.width = ENEMY_SIZE[0]
+        self.height = ENEMY_SIZE[1]
         self.anim_timer = 0
         self.anim_speed = 0.13
         self.hp = max_hp

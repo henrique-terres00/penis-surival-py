@@ -82,6 +82,11 @@ class Player:
         self.ultimate_duration = 0
         self.mana = 100
         self.max_mana = 100
+        
+        # Milky Grenade attributes
+        self.grenade_cooldown = 0
+        self.grenade_cooldown_max = 120  # 2 seconds at 60 FPS
+        self.grenade_mana_cost = 30  # Mana cost for throwing a grenade
 
     def handle_input(self, keys):
         if self.attack_cooldown > 0:
@@ -112,6 +117,10 @@ class Player:
         # Ultimate ability activation with 'x' key when mana is full
         if keys[pygame.K_x] and self.mana >= self.max_mana and self.ultimate_cooldown == 0:
             self.use_ultimate()
+            
+        # Milky Grenade ability with 'q' key when enough mana is available and cooldown is ready
+        if keys[pygame.K_q] and self.mana >= self.grenade_mana_cost and self.grenade_cooldown == 0:
+            self.throw_grenade()
 
     def update(self):
         from hud import update_damage_popups
@@ -137,6 +146,9 @@ class Player:
         # Update cooldowns
         if self.ultimate_cooldown > 0:
             self.ultimate_cooldown -= 1
+            
+        if self.grenade_cooldown > 0:
+            self.grenade_cooldown -= 1
                 
         if self.state == 'attack':
             self.anim_timer += self.attack_anim_speed
@@ -225,6 +237,27 @@ class Player:
         # Set a flag to indicate that we need to apply damage to enemies
         # This will be checked in the main game loop
         self.ultimate_damage_pending = True
+        
+    def throw_grenade(self):
+        # Throw a milky grenade in the direction the player is facing.
+        # The grenade follows a projectile motion and explodes after a set time.
+        # It costs mana and has a cooldown.
+        if self.mana < self.grenade_mana_cost or self.grenade_cooldown > 0:
+            return  # Not enough mana or on cooldown
+            
+        # Consume mana
+        self.mana -= self.grenade_mana_cost
+        
+        # Set cooldown
+        self.grenade_cooldown = self.grenade_cooldown_max
+        
+        # Set a flag to indicate that we need to create a grenade
+        # This will be checked in the main game loop
+        self.grenade_thrown = True
+        
+        # Store the player's position and direction for grenade creation
+        self.grenade_position = (self.x + 90, self.y + 90)  # Center of player
+        self.grenade_direction = self.direction
 
     def draw(self, surface):
         from hud import draw_damage_popups

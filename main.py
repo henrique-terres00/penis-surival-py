@@ -11,6 +11,7 @@ from game_sounds import GameSounds
 from effects import Effects
 from health_potion import HealthPotion
 from mana_potion import ManaPotion
+from milky_grenade import MilkyGrenade
 
 from background import ParallaxBackground
 
@@ -26,17 +27,13 @@ def handle_events(game_state, restart_flag):
     return None
 
 
-def update_game(player, spawner, enemies, kills, game_state, effects, potions):
+def update_game(player, spawner, enemies, kills, game_state, effects, potions, grenades):
     # Player input and update
     keys = pygame.key.get_pressed()
     player.handle_input(keys)
     player.update()
     
-    # Update the ultimate HUD based on the state of mana and ultimate
-    is_ultimate_ready = player.mana >= player.max_mana and not player.ultimate_active
-    
-    # Add or update the ultimate HUD effect
-    effects.add_ultimate_hud(is_ready=is_ultimate_ready)
+    # We no longer need to update the ultimate HUD here as it's now handled by the skill icons in the center top of the screen
 
     # Spawn enemies
     new_enemy = spawner.update(player_alive=(player.hp > 0))
@@ -107,9 +104,9 @@ def update_game(player, spawner, enemies, kills, game_state, effects, potions):
             # Use the full effect area (horizontal and vertical) with proper hitbox collision
             for enemy in enemies:
                 if enemy.state != 'dead':
-                    # Get enemy dimensions
-                    enemy_width = getattr(enemy, 'width', 180)  # ENEMY_SIZE[0]
-                    enemy_height = getattr(enemy, 'height', 180)  # ENEMY_SIZE[1]
+                    # Ensure enemy has width and height attributes
+                    enemy_width = getattr(enemy, 'width', 180)  # Default to ENEMY_SIZE[0]
+                    enemy_height = getattr(enemy, 'height', 180)  # Default to ENEMY_SIZE[1]
                     
                     # Create a pygame.Rect for the enemy's hitbox
                     enemy_rect = pygame.Rect(enemy.x, enemy.y, enemy_width, enemy_height)
@@ -211,6 +208,56 @@ def update_game(player, spawner, enemies, kills, game_state, effects, potions):
                     
             enemy.item_dropped = True
             
+    # Handle Milky Grenade creation if player has thrown one
+    if hasattr(player, 'grenade_thrown') and player.grenade_thrown:
+        # Create a new grenade at the player's position
+        x, y = player.grenade_position
+        grenade = MilkyGrenade(x, y, player.grenade_direction)
+        grenades.append(grenade)
+        
+        # Reset the flag
+        player.grenade_thrown = False
+    
+    # Update grenades and check for explosions
+    for grenade in grenades[:]:
+        grenade.update()
+        
+        # If grenade is exploding, check for enemy damage
+        if grenade.exploding:
+            explosion_rect = grenade.get_explosion_rect()
+            if explosion_rect:
+                for enemy in enemies:
+                    if enemy.state != 'dead':
+                        # Ensure enemy has width and height attributes
+                        enemy_width = getattr(enemy, 'width', 180)  # Default to ENEMY_SIZE[0]
+                        enemy_height = getattr(enemy, 'height', 180)  # Default to ENEMY_SIZE[1]
+                        
+                        # Create a pygame.Rect for the enemy's hitbox
+                        enemy_rect = pygame.Rect(enemy.x, enemy.y, enemy_width, enemy_height)
+                        if explosion_rect.colliderect(enemy_rect):
+                            # Calculate damage based on distance from explosion center
+                            dx = (enemy.x + enemy_width/2) - (grenade.x)
+                            dy = (enemy.y + enemy_height/2) - (grenade.y)
+                            distance = (dx**2 + dy**2)**0.5
+                            
+                            # Maximum damage at center, decreasing with distance
+                            max_damage = 40
+                            min_damage = 10
+                            damage_factor = max(0, 1 - distance / grenade.explosion_radius)
+                            damage = int(min_damage + damage_factor * (max_damage - min_damage))
+                            
+                            enemy.take_damage(damage)
+                            if enemy.hp <= 0:
+                                kills[0] += 1
+                                if enemy.__class__.__name__ == 'WolfEnemy':
+                                    player.mana = min(player.max_mana, player.mana + 10)
+                                elif enemy.__class__.__name__ == 'FatGirlEnemy':
+                                    player.mana = min(player.max_mana, player.mana + 12)
+        
+        # Remove inactive grenades
+        if not grenade.active:
+            grenades.remove(grenade)
+    
     # Update potions and other items
     for item in potions[:]:  # Use a copy of the list to be able to remove items during iteration
         item.update()
@@ -231,12 +278,7 @@ def update_game(player, spawner, enemies, kills, game_state, effects, potions):
                 player.mana = min(player.max_mana, player.mana + mana_amount)
                 # Add "MANA" text effect at the potion's position
                 player.damage_popups.append([f"{mana_amount}", item.x, item.y - 30, 255, 0, "mana"])
-            
-            # Remove item after being collected
-            potions.remove(item)
-
-
-def draw_game(screen, background, player, enemies, hud, elapsed_time, kills, effects, potions):
+def draw_game(screen, player, enemies, background, effects, potions, grenades, elapsed_time, kills, hud):
     background.update()
     background.draw(screen)
     for enemy in enemies:
@@ -244,6 +286,11 @@ def draw_game(screen, background, player, enemies, hud, elapsed_time, kills, eff
     # Draw potions before the player so the player is on top
     for potion in potions:
         potion.draw(screen)
+    
+    # Draw grenades
+    for grenade in grenades:
+        grenade.draw(screen)
+        
     player.draw(screen)
     hud.draw_hud(screen, player, int(elapsed_time), kills)
     # Draw visual effects on top of everything
@@ -271,6 +318,7 @@ def main(start_playing=False):
     player = Player()
     enemies = []
     potions = []  # List to store health potions
+    grenades = []  # List to store active grenades
     spawner = Spawner()
     game_state = GameState()
     effects = Effects()  # Initialize the visual effects manager
@@ -316,10 +364,10 @@ def main(start_playing=False):
 
         # --- MAIN GAMEPLAY ---
         if game_state.state == GameState.PLAYING:
-            update_game(player, spawner, enemies, kills, game_state, effects, potions)
+            update_game(player, spawner, enemies, kills, game_state, effects, potions, grenades)
             effects.update()  # Update the visual effects
             elapsed_time += 1/FPS if FPS else 1/60
-            draw_game(screen, background, player, enemies, hud, elapsed_time, kills[0], effects, potions)
+            draw_game(screen, player, enemies, background, effects, potions, grenades, elapsed_time, kills[0], hud)
             # Save kills/time for game over
             if player.hp <= 0 and game_state.state != 'game_over':
                 game_state.last_kills = kills[0]
